@@ -75,7 +75,10 @@ class Prestamo(models.Model):
             # 3. fecha_devolucion se calcula a partir de esa misma variable
             # `ahora` ya es aware (USE_TZ=True), así que pandas conserva el tzinfo;
             # no hay que pasar por make_aware (que solo acepta datetimes naive).
-            self.fecha_devolucion = vencimiento.to_pydatetime()
+            # Se fija a las 23:59:59 del día calculado (a más tardar ese día, no a esa hora exacta).
+            self.fecha_devolucion = vencimiento.to_pydatetime().replace(
+                hour=23, minute=59, second=59, microsecond=0
+            )
             
         super().save(*args, **kwargs)
     def __str__(self):

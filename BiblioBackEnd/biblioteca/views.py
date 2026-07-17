@@ -31,13 +31,28 @@ class PrestamoViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST
             )
 
+        if prestamo.calcular_multa_actual > 0:
+            return Response(
+                {"error": "No se puede renovar un préstamo que está en multa."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if prestamo.renovacion_consumida:
+            return Response(
+                {"error": "Este préstamo ya usó su única renovación disponible."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         # 3. Calculamos la nueva fecha con pandas usando la constante
         dias = config.DIAS_PRESTAMO_ESTANDAR
         nueva_fecha = (
-            pd.to_datetime(prestamo.fecha_devolucion) + 
+            pd.to_datetime(prestamo.fecha_devolucion) +
             pd.tseries.offsets.BusinessDay(n=dias)
         )
-        prestamo.fecha_devolucion = nueva_fecha.to_pydatetime()
+        prestamo.fecha_devolucion = nueva_fecha.to_pydatetime().replace(
+            hour=23, minute=59, second=59, microsecond=0
+        )
+        prestamo.renovacion_consumida = True
         prestamo.save()
 
         # 4. Devolvemos el préstamo actualizado
