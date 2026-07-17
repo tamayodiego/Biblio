@@ -13,9 +13,22 @@ class Libro(models.Model):
     unidades = models.IntegerField(default=1)
     unidades_disponibles = models.IntegerField(default=1)
     en_multa = models.BooleanField(default=False)
+    genero = models.CharField(max_length=100, blank=True)
+    paginas = models.PositiveIntegerField(null=True, blank=True)
+    sinopsis = models.TextField(blank=True)
+    portada_url = models.URLField(blank=True)
 
     def __str__(self):
         return self.titulo
+
+
+class Lector(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='lector')
+    numero_lector = models.CharField(max_length=20, unique=True)
+    telefono = models.CharField(max_length=20, blank=True)
+
+    def __str__(self):
+        return f"{self.usuario.username} ({self.numero_lector})"
 
 
 class Prestamo(models.Model):
@@ -25,7 +38,7 @@ class Prestamo(models.Model):
     fecha_devolucion = models.DateTimeField(null=True, blank=True)
     fecha_devolucion_real = models.DateTimeField(null=True, blank=True)
     activo = models.BooleanField(default=True)
-    renovacion_consumida = models
+    renovacion_consumida = models.BooleanField(default=False)
     monto_multa = models.DecimalField(max_digits=6, decimal_places=2, default=0.0)
 
     @property
@@ -73,7 +86,12 @@ class Prestamo(models.Model):
             vencimiento = pd.to_datetime(ahora) + pd.tseries.offsets.BusinessDay(n=dias_permiso)
             
             # 3. fecha_devolucion se calcula a partir de esa misma variable
-            self.fecha_devolucion = timezone.make_aware(vencimiento.to_pydatetime())
+            # `ahora` ya es aware (USE_TZ=True), así que pandas conserva el tzinfo;
+            # no hay que pasar por make_aware (que solo acepta datetimes naive).
+            # Se fija a las 23:59:59 del día calculado (a más tardar ese día, no a esa hora exacta).
+            self.fecha_devolucion = vencimiento.to_pydatetime().replace(
+                hour=23, minute=59, second=59, microsecond=0
+            )
             
         super().save(*args, **kwargs)
     def __str__(self):
