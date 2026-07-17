@@ -1,22 +1,37 @@
 import pandas as pd
 from constance import config
-from rest_framework import viewsets, permissions, status
-from rest_framework.permissions import DjangoModelPermissions
+from rest_framework import viewsets, permissions, status, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from .models import Libro, Prestamo
+from rest_framework.views import APIView
+from .models import Libro, Prestamo, Lector
 from .serializers import LibroSerializer, PrestamoSerializer
+
+
+class EsStaffOSoloLectura(permissions.BasePermission):
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return bool(request.user and request.user.is_staff)
+
 
 class LibroViewSet(viewsets.ModelViewSet):
     queryset = Libro.objects.all()
     serializer_class = LibroSerializer
 
-    permission_classes = [DjangoModelPermissions]
+    permission_classes = [permissions.IsAuthenticated, EsStaffOSoloLectura]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ['titulo', 'autor']
 
 class PrestamoViewSet(viewsets.ModelViewSet):
-    queryset = Prestamo.objects.all()
     serializer_class = PrestamoSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.is_staff:
+            return Prestamo.objects.all()
+        return Prestamo.objects.filter(usuario=user)
 
     @action(detail=True, methods=['post'], url_path='renovar')
     def renovar(self, request, pk=None):
@@ -86,3 +101,27 @@ class PrestamoViewSet(viewsets.ModelViewSet):
             "mensaje": "Multa pagada correctamente.",
             "prestamo": serializer.data
         }, status=status.HTTP_200_OK)
+
+
+class MiCuentaView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        lector, _ = Lector.objects.get_or_create(
+            usuario=user,
+            defaults={'numero_lector': f"LIB-{user.date_joined.year}-{user.id:04d}"}
+        )
+
+        prestamos_usuario = Prestamo.objects.filter(usuario=user)
+
+        return Response({
+            "nombre_completo": user.get_full_name() or user.username,
+            "email": user.email,
+            "numero_lector": lector.numero_lector,
+            "telefono": lector.telefono,
+            "miembro_desde": user.date_joined,
+            "activo": user.is_active,
+            "libros_leidos": prestamos_usuario.filter(activo=False).count(),
+            "prestamos_activos": prestamos_usuario.filter(activo=True).count(),
+        })
