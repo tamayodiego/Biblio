@@ -116,6 +116,7 @@ class MiCuentaView(APIView):
         prestamos_usuario = Prestamo.objects.filter(usuario=user)
 
         return Response({
+            "id": user.id,
             "nombre_completo": user.get_full_name() or user.username,
             "email": user.email,
             "numero_lector": lector.numero_lector,

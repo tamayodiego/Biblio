@@ -41,10 +41,12 @@ INSTALLED_APPS = [
     'biblioteca',
     'constance',
     'constance.backends.database',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -135,3 +137,8 @@ CONSTANCE_CONFIG = {
     'MONEDA' : ("MXN","Moneda a usar ",str),
     'PLAZO' : (7,"Dias de prestamo", int),
 }
+
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost:5173",
+]
+CORS_ALLOW_CREDENTIALS = True
