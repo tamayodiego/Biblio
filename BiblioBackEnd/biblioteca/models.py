@@ -13,9 +13,22 @@ class Libro(models.Model):
     unidades = models.IntegerField(default=1)
     unidades_disponibles = models.IntegerField(default=1)
     en_multa = models.BooleanField(default=False)
+    genero = models.CharField(max_length=100, blank=True)
+    paginas = models.PositiveIntegerField(null=True, blank=True)
+    sinopsis = models.TextField(blank=True)
+    portada_url = models.URLField(blank=True)
 
     def __str__(self):
         return self.titulo
+
+
+class Lector(models.Model):
+    usuario = models.OneToOneField(User, on_delete=models.CASCADE, related_name='lector')
+    numero_lector = models.CharField(max_length=20, unique=True)
+    telefono = models.CharField(max_length=20, blank=True)
+
+    def __str__(self):
+        return f"{self.usuario.username} ({self.numero_lector})"
 
 
 class Prestamo(models.Model):
