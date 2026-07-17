@@ -9,7 +9,7 @@ class LibroSerializer(serializers.ModelSerializer):
 class PrestamoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Prestamo
-        fields = ['libro','usuario']
+        fields = '__all__'
         read_only_fields = ['fecha_prestamo', 'fecha_devolucion', 'fecha_devolucion_real','activo', 'renovacion_consumida', 'monto_multa']
 
     def to_representation(self, instance):

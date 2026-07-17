@@ -133,5 +133,5 @@ CONSTANCE_CONFIG = {
     'DIAS_PRESTAMO_ESTANDAR': (7, 'Días que dura un préstamo normal', int),
     'TOPE_MAXIMO_MULTA': (200.0, 'Monto máximo que puede alcanzar una multa', float),
     'MONEDA' : ("MXN","Moneda a usar ",str),
-    'PLAZO' : {7,"Dias de prestamo", int},
+    'PLAZO' : (7,"Dias de prestamo", int),
 }

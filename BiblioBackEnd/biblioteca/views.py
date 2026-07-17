@@ -1,4 +1,6 @@
-from rest_framework import viewsets, permissions
+import pandas as pd
+from constance import config
+from rest_framework import viewsets, permissions, status
 from rest_framework.permissions import DjangoModelPermissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -35,7 +37,7 @@ class PrestamoViewSet(viewsets.ModelViewSet):
             pd.to_datetime(prestamo.fecha_devolucion) + 
             pd.tseries.offsets.BusinessDay(n=dias)
         )
-        prestamo.fecha_devolucion = timezone.make_aware(nueva_fecha.to_pydatetime())
+        prestamo.fecha_devolucion = nueva_fecha.to_pydatetime()
         prestamo.save()
 
         # 4. Devolvemos el préstamo actualizado

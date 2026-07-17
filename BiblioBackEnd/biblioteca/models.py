@@ -25,7 +25,7 @@ class Prestamo(models.Model):
     fecha_devolucion = models.DateTimeField(null=True, blank=True)
     fecha_devolucion_real = models.DateTimeField(null=True, blank=True)
     activo = models.BooleanField(default=True)
-    renovacion_consumida = models
+    renovacion_consumida = models.BooleanField(default=False)
     monto_multa = models.DecimalField(max_digits=6, decimal_places=2, default=0.0)
 
     @property
@@ -73,7 +73,9 @@ class Prestamo(models.Model):
             vencimiento = pd.to_datetime(ahora) + pd.tseries.offsets.BusinessDay(n=dias_permiso)
             
             # 3. fecha_devolucion se calcula a partir de esa misma variable
-            self.fecha_devolucion = timezone.make_aware(vencimiento.to_pydatetime())
+            # `ahora` ya es aware (USE_TZ=True), así que pandas conserva el tzinfo;
+            # no hay que pasar por make_aware (que solo acepta datetimes naive).
+            self.fecha_devolucion = vencimiento.to_pydatetime()
             
         super().save(*args, **kwargs)
     def __str__(self):
