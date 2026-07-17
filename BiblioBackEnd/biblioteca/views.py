@@ -61,3 +61,28 @@ class PrestamoViewSet(viewsets.ModelViewSet):
             "mensaje": f"Préstamo renovado por {dias} días hábiles.",
             "prestamo": serializer.data
         }, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'], url_path='pagar-multa')
+    def pagar_multa(self, request, pk=None):
+        prestamo = self.get_object()
+
+        if prestamo.activo:
+            return Response(
+                {"error": "Solo se puede pagar la multa de un préstamo ya devuelto."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if prestamo.monto_multa <= 0:
+            return Response(
+                {"error": "Este préstamo no tiene multa pendiente de pago."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        prestamo.monto_multa = 0
+        prestamo.save()
+
+        serializer = self.get_serializer(prestamo)
+        return Response({
+            "mensaje": "Multa pagada correctamente.",
+            "prestamo": serializer.data
+        }, status=status.HTTP_200_OK)
