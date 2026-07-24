@@ -1,23 +1,35 @@
-// Credenciales guardadas en sessionStorage como header Basic Auth ya codificado.
-// Esto es TEMPORAL: el backend solo soporta Basic Auth por ahora. Guardar
-// user:pass (aunque sea en base64, no encriptado) en el navegador no es un
-// mecanismo serio de auth para producción -- queda pendiente reemplazarlo
-// por un login con token propio más adelante.
-const STORAGE_KEY = 'biblio_auth'
+// Tokens JWT guardados en sessionStorage. Ya NO guardamos usuario:password;
+// solo tokens firmados por el backend, que además expiran.
+const ACCESS_KEY = 'biblio_access'
+const REFRESH_KEY = 'biblio_refresh'
 
-export function getAuthHeader(): string | null {
-  return sessionStorage.getItem(STORAGE_KEY)
+export function getAccessToken(): string | null {
+  return sessionStorage.getItem(ACCESS_KEY)
 }
 
-export function setCredentials(username: string, password: string) {
-  const encoded = btoa(`${username}:${password}`)
-  sessionStorage.setItem(STORAGE_KEY, `Basic ${encoded}`)
+export function getRefreshToken(): string | null {
+  return sessionStorage.getItem(REFRESH_KEY)
+}
+
+export function getAuthHeader(): string | null {
+  const access = getAccessToken()
+  return access ? `Bearer ${access}` : null
+}
+
+export function setTokens(access: string, refresh: string) {
+  sessionStorage.setItem(ACCESS_KEY, access)
+  sessionStorage.setItem(REFRESH_KEY, refresh)
+}
+
+export function setAccessToken(access: string) {
+  sessionStorage.setItem(ACCESS_KEY, access)
 }
 
 export function clearCredentials() {
-  sessionStorage.removeItem(STORAGE_KEY)
+  sessionStorage.removeItem(ACCESS_KEY)
+  sessionStorage.removeItem(REFRESH_KEY)
 }
 
 export function isAuthenticated(): boolean {
-  return getAuthHeader() !== null
+  return getAccessToken() !== null
 }

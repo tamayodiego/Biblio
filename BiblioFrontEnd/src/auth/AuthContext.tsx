@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
-import { getAuthHeader, setCredentials, clearCredentials } from './authStorage'
+import { getAuthHeader, clearCredentials } from './authStorage'
+import { obtenerTokens } from '@/api/auth'
 import { getMiCuenta } from '@/api/miCuenta'
 import { ApiError } from '@/api/client'
 import type { MiCuenta } from '@/api/types'
@@ -29,8 +30,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [])
 
   async function login(username: string, password: string) {
-    setCredentials(username, password)
     try {
+      await obtenerTokens(username, password)
       const perfil = await getMiCuenta()
       setUser(perfil)
     } catch (err) {
